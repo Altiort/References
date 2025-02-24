@@ -1,1 +1,0 @@
-Bibtex references list
