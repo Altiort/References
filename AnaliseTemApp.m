@@ -2,340 +2,437 @@ classdef AnaliseTemApp < matlab.apps.AppBase
     properties (Access = private)
         % Interface principal
         UIFigure            matlab.ui.Figure
-        MainGrid           matlab.ui.container.GridLayout
-        ResultFigure       matlab.ui.Figure
+        MainGrid            matlab.ui.container.GridLayout
+        TabGroup            matlab.ui.container.TabGroup
+        MainMenu            matlab.ui.container.Menu
+        CalcularButton      matlab.ui.container.Menu
         
-        % Campos para Recursos Humanos
+        % Janela de resultados
+        ResultFigure        matlab.ui.Figure
+        ResultadoTextArea   matlab.ui.control.TextArea
+        
+        % Abas
+        RecursosHumanosTab  matlab.ui.container.Tab
+        InsumosTab          matlab.ui.container.Tab
+        UtilidadesTab       matlab.ui.container.Tab
+        CustosFixosTab      matlab.ui.container.Tab
+        GasesTab            matlab.ui.container.Tab
+        
+        % Campos - Recursos Humanos
         ValorHoraHomemEdit     matlab.ui.control.NumericEditField
         ConsumoHoraHomemEdit   matlab.ui.control.NumericEditField
+        TipoBolsaEdit          matlab.ui.control.EditField
+        ValorBolsaEdit         matlab.ui.control.NumericEditField
+        ConsumoHoraBolsaEdit   matlab.ui.control.NumericEditField
         
-        % Campos para Insumos
-        NitrogenioLiquidoEdit  matlab.ui.control.NumericEditField
-        QtdNitrogenioEdit      matlab.ui.control.NumericEditField
-        GradesCuEdit          matlab.ui.control.NumericEditField
-        QtdGradesEdit         matlab.ui.control.NumericEditField
-        PincasEdit            matlab.ui.control.NumericEditField
-        QtdPincasEdit         matlab.ui.control.NumericEditField
+        % Campos - Insumos (Cu (Grades de Cobre), Resina Epóxi, Lâminas de Vidro, Recipientes)
+        GradesCuPacoteEdit            matlab.ui.control.NumericEditField
+        GradesAnaliseEdit             matlab.ui.control.NumericEditField
+        ResinaEpoxiEdit               matlab.ui.control.NumericEditField
+        LaminasVidroEdit              matlab.ui.control.NumericEditField
+        RecipientesLiquidoEdit        matlab.ui.control.NumericEditField
+        RecipientesMicropulverulentoEdit matlab.ui.control.NumericEditField
+        GradesOuroPacoteEdit          matlab.ui.control.NumericEditField
         
-        % Campos para Utilidades
-        EnergiaHoraEdit       matlab.ui.control.NumericEditField
-        ConsumoEnergiaEdit    matlab.ui.control.NumericEditField
-        AguaM3Edit            matlab.ui.control.NumericEditField
-        ConsumoAguaEdit       matlab.ui.control.NumericEditField
+        % Campos - Utilidades
+        EnergiaKwhEdit                matlab.ui.control.NumericEditField
+        ConsumoEnergiaHoraEdit        matlab.ui.control.NumericEditField
+        TempoUsoEnergiaEdit           matlab.ui.control.NumericEditField
+        AguaM3Edit                    matlab.ui.control.NumericEditField
+        ConsumoAguaHoraEdit           matlab.ui.control.NumericEditField
+        TempoUsoAguaEdit              matlab.ui.control.NumericEditField
         
-        % Campos para Custos Fixos
-        ValorEquipamentoEdit  matlab.ui.control.NumericEditField
-        VidaUtilMesesEdit     matlab.ui.control.NumericEditField
-        AnalisesMensaisEdit   matlab.ui.control.NumericEditField
+        % Campos - Gases
+        NitrogenioReservatorioEdit    matlab.ui.control.NumericEditField
+        ConsumoNitrogenioHoraEdit     matlab.ui.control.NumericEditField
+        TempoAnaliseNitrogenioEdit    matlab.ui.control.NumericEditField
+        ArgonioReservatorioEdit       matlab.ui.control.NumericEditField
+        ConsumoArgonioHoraEdit        matlab.ui.control.NumericEditField
+        TempoAnaliseArgonioEdit       matlab.ui.control.NumericEditField
+        OxigenioReservatorioEdit      matlab.ui.control.NumericEditField
+        ConsumoOxigenioHoraEdit       matlab.ui.control.NumericEditField
+        TempoAnaliseOxigenioEdit      matlab.ui.control.NumericEditField
+        HelioReservatorioEdit         matlab.ui.control.NumericEditField
+        ConsumoHelioHoraEdit          matlab.ui.control.NumericEditField
+        TempoAnaliseHelioEdit         matlab.ui.control.NumericEditField
         
-        ExecutarButton        matlab.ui.control.Button
-        ResultadoTextArea     matlab.ui.control.TextArea
-        TipoAnalise          string = "TEM"
+        % Campos - Custos Fixos
+        ValorMicroscopioEdit          matlab.ui.control.NumericEditField
+        VidaUtilMicroscopioEdit       matlab.ui.control.NumericEditField
+        ValorUMTEdit                  matlab.ui.control.NumericEditField
+        VidaUtilUMTEdit               matlab.ui.control.NumericEditField
+        ValorEdificacaoEdit           matlab.ui.control.NumericEditField
+        VidaUtilEdificacaoEdit        matlab.ui.control.NumericEditField
+        AnalisesMensaisEdit           matlab.ui.control.NumericEditField
+        
+        % Campos - EPIs
+        LuvasNitrilaEdit              matlab.ui.control.NumericEditField
+        OculosProtecaoEdit            matlab.ui.control.NumericEditField
+        AventaisLaboratorioEdit       matlab.ui.control.NumericEditField
+        
+        % Propriedades do sistema
+        TipoAnalise          string
     end
-      
+    
     methods (Access = private)
         function createComponents(app)
-            % Criar a janela principal
+            % Criar janela principal
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 800 800];
+            app.UIFigure.Position = [100 100 1000 700];
             app.UIFigure.Name = ['Análise ' char(app.TipoAnalise) ' - Cálculo de Custos'];
-            app.UIFigure.WindowStyle = 'normal';
-            app.UIFigure.Resize = 'on';
             
-            % Criar Grid Layout principal
-            app.MainGrid = uigridlayout(app.UIFigure, [30 2]);
-            app.MainGrid.ColumnWidth = {'1x', '1x'};
-            app.MainGrid.RowHeight = repmat({'fit'}, 1, 30);
+            % Menu principal
+            app.MainMenu = uimenu(app.UIFigure, 'Text', 'Operações');
+            app.CalcularButton = uimenu(app.MainMenu, 'Text', 'Calcular', 'MenuSelectedFcn', @(~,~) calcularResultados(app));
+            
+            % Grid principal
+            app.MainGrid = uigridlayout(app.UIFigure, [1 1]);
             app.MainGrid.Padding = [10 10 10 10];
-            app.MainGrid.RowSpacing = 10;
             
-            % Título da Aplicação
-            titulo = uilabel(app.MainGrid);
-            titulo.Text = ['Análise de Custos - ' char(app.TipoAnalise)];
-            titulo.FontSize = 16;
-            titulo.FontWeight = 'bold';
-            titulo.Layout.Column = [1 2];
-            titulo.HorizontalAlignment = 'center';
+            % Grupo de abas
+            app.TabGroup = uitabgroup(app.MainGrid);
             
-            % Seção: Recursos Humanos
-            hr_label = uilabel(app.MainGrid);
-            hr_label.Text = 'RECURSOS HUMANOS';
-            hr_label.FontWeight = 'bold';
-            hr_label.BackgroundColor = [0.9 0.9 1];
-            hr_label.Layout.Column = [1 2];
+            % Aba - Recursos Humanos
+            app.RecursosHumanosTab = uitab(app.TabGroup, 'Title', 'Recursos Humanos');
+            rhGrid = uigridlayout(app.RecursosHumanosTab, [3 2]);
             
-            uilabel(app.MainGrid, 'Text', 'Valor Hora/Homem (R$):');
-            app.ValorHoraHomemEdit = uieditfield(app.MainGrid, 'numeric');
+            % Técnicos
+            uilabel(rhGrid, 'Text', 'Valor Hora/Homem (R$):');
+            app.ValorHoraHomemEdit = uieditfield(rhGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Consumo Hora/Homem:');
-            app.ConsumoHoraHomemEdit = uieditfield(app.MainGrid, 'numeric');
+            uilabel(rhGrid, 'Text', 'Tempo de operação (horas):');
+            app.ConsumoHoraHomemEdit = uieditfield(rhGrid, 'numeric');
             
-            % Seção: Insumos
-            insumos_label = uilabel(app.MainGrid);
-            insumos_label.Text = 'INSUMOS';
-            insumos_label.FontWeight = 'bold';
-            insumos_label.BackgroundColor = [0.9 1 0.9];
-            insumos_label.Layout.Column = [1 2];
+            % Bolsistas
+            uilabel(rhGrid, 'Text', 'Tipo de Bolsa:');
+            app.TipoBolsaEdit = uieditfield(rhGrid, 'text');
             
-            uilabel(app.MainGrid, 'Text', 'Custo N₂(l) (R$/L) (Nitrogênio Líquido):');
-            app.NitrogenioLiquidoEdit = uieditfield(app.MainGrid, 'numeric');
+            uilabel(rhGrid, 'Text', 'Valor da Bolsa (R$):');
+            app.ValorBolsaEdit = uieditfield(rhGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Quantidade N₂(l) (L):');
-            app.QtdNitrogenioEdit = uieditfield(app.MainGrid, 'numeric');
+            uilabel(rhGrid, 'Text', 'Consumo de Hora/Homem na Análise:');
+            app.ConsumoHoraBolsaEdit = uieditfield(rhGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Custo Grade Cu (R$/unidade) (Grades de Cobre):');
-            app.GradesCuEdit = uieditfield(app.MainGrid, 'numeric');
+            % Aba - Insumos
+            app.InsumosTab = uitab(app.TabGroup, 'Title', 'Insumos');
+            insumosGrid = uigridlayout(app.InsumosTab, [7 2]);
             
-            uilabel(app.MainGrid, 'Text', 'Quantidade Grades:');
-            app.QtdGradesEdit = uieditfield(app.MainGrid, 'numeric');
+            % Cu (Grades de Cobre)
+            uilabel(insumosGrid, 'Text', 'Custo pacote grades Cu (R$/100un):');
+            app.GradesCuPacoteEdit = uieditfield(insumosGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Custo Pinças (R$/unidade):');
-            app.PincasEdit = uieditfield(app.MainGrid, 'numeric');
+            uilabel(insumosGrid, 'Text', 'Quantidade de grades por análise:');
+            app.GradesAnaliseEdit = uieditfield(insumosGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Quantidade Pinças:');
-            app.QtdPincasEdit = uieditfield(app.MainGrid, 'numeric');
+            % Resina Epóxi
+            uilabel(insumosGrid, 'Text', 'Custo Resina Epóxi (R$/g):');
+            app.ResinaEpoxiEdit = uieditfield(insumosGrid, 'numeric');
             
-            % Seção: Utilidades
-            util_label = uilabel(app.MainGrid);
-            util_label.Text = 'UTILIDADES';
-            util_label.FontWeight = 'bold';
-            util_label.BackgroundColor = [1 0.9 0.9];
-            util_label.Layout.Column = [1 2];
+            % Lâminas de Vidro para Ultramicrotomo
+            uilabel(insumosGrid, 'Text', 'Custo Lâminas de Vidro (R$/un):');
+            app.LaminasVidroEdit = uieditfield(insumosGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Custo Energia (R$/kWh):');
-            app.EnergiaHoraEdit = uieditfield(app.MainGrid, 'numeric');
+            % Recipientes para Material Líquido
+            uilabel(insumosGrid, 'Text', 'Custo Recipientes para Material Líquido (R$/un):');
+            app.RecipientesLiquidoEdit = uieditfield(insumosGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Consumo Energia (kWh):');
-            app.ConsumoEnergiaEdit = uieditfield(app.MainGrid, 'numeric');
+            % Recipientes para Material Micropulverulento
+            uilabel(insumosGrid, 'Text', 'Custo Recipientes para Material Micropulverulento (R$/un):');
+            app.RecipientesMicropulverulentoEdit = uieditfield(insumosGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Custo H₂O (R$/m³) (Água):');
-            app.AguaM3Edit = uieditfield(app.MainGrid, 'numeric');
+            % Grades de Ouro
+            uilabel(insumosGrid, 'Text', 'Custo pacote grades Au (R$/100un):');
+            app.GradesOuroPacoteEdit = uieditfield(insumosGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Consumo H₂O (m³) (Água):');
-            app.ConsumoAguaEdit = uieditfield(app.MainGrid, 'numeric');
+            % Aba - Utilidades
+            app.UtilidadesTab = uitab(app.TabGroup, 'Title', 'Utilidades');
+            utilGrid = uigridlayout(app.UtilidadesTab, [3 2]);
             
-            % Seção: Custos Fixos
-            fixos_label = uilabel(app.MainGrid);
-            fixos_label.Text = 'CUSTOS FIXOS';
-            fixos_label.FontWeight = 'bold';
-            fixos_label.BackgroundColor = [1 1 0.9];
-            fixos_label.Layout.Column = [1 2];
+            % Energia Elétrica
+            uilabel(utilGrid, 'Text', 'Custo Energia (R$/kWh):');
+            app.EnergiaKwhEdit = uieditfield(utilGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Valor do Equipamento (R$):');
-            app.ValorEquipamentoEdit = uieditfield(app.MainGrid, 'numeric');
+            uilabel(utilGrid, 'Text', 'Consumo por hora (kWh):');
+            app.ConsumoEnergiaHoraEdit = uieditfield(utilGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Vida Útil (meses):');
-            app.VidaUtilMesesEdit = uieditfield(app.MainGrid, 'numeric');
+            uilabel(utilGrid, 'Text', 'Tempo de uso (horas):');
+            app.TempoUsoEnergiaEdit = uieditfield(utilGrid, 'numeric');
             
-            uilabel(app.MainGrid, 'Text', 'Análises Mensais:');
-            app.AnalisesMensaisEdit = uieditfield(app.MainGrid, 'numeric');
+            % H₂O (Água)
+            uilabel(utilGrid, 'Text', 'Custo H₂O por m³ (R$):');
+            app.AguaM3Edit = uieditfield(utilGrid, 'numeric');
             
-            % Botão Calcular
-            app.ExecutarButton = uibutton(app.MainGrid);
-            app.ExecutarButton.Text = 'Calcular';
-            app.ExecutarButton.ButtonPushedFcn = @(~,~) calcularResultados(app);
-            app.ExecutarButton.Layout.Column = [1 2];
+            uilabel(utilGrid, 'Text', 'Consumo H₂O por hora (m³/h):');
+            app.ConsumoAguaHoraEdit = uieditfield(utilGrid, 'numeric');
             
-            % Tornar a interface visível
+            uilabel(utilGrid, 'Text', 'Tempo de uso H₂O (horas):');
+            app.TempoUsoAguaEdit = uieditfield(utilGrid, 'numeric');
+            
+            % Aba - Gases
+            app.GasesTab = uitab(app.TabGroup, 'Title', 'Gases');
+            gasesGrid = uigridlayout(app.GasesTab, [8 2]);
+            
+            % N₂(l) (Nitrogênio Líquido)
+            uilabel(gasesGrid, 'Text', 'Custo do reservatório N₂(l) 50L (R$):');
+            app.NitrogenioReservatorioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Consumo N₂(l) por hora (L/h):');
+            app.ConsumoNitrogenioHoraEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Tempo de análise (horas):');
+            app.TempoAnaliseNitrogenioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            % Ar (Argônio)
+            uilabel(gasesGrid, 'Text', 'Custo do reservatório Ar (Argônio) (R$):');
+            app.ArgonioReservatorioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Consumo Ar por hora (L/h):');
+            app.ConsumoArgonioHoraEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Tempo de análise (horas):');
+            app.TempoAnaliseArgonioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            % O₂ (Oxigênio)
+            uilabel(gasesGrid, 'Text', 'Custo do reservatório O₂ (Oxigênio) (R$):');
+            app.OxigenioReservatorioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Consumo O₂ por hora (L/h):');
+            app.ConsumoOxigenioHoraEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Tempo de análise (horas):');
+            app.TempoAnaliseOxigenioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            % He (Hélio)
+            uilabel(gasesGrid, 'Text', 'Custo do reservatório He (Hélio) (R$):');
+            app.HelioReservatorioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Consumo He por hora (L/h):');
+            app.ConsumoHelioHoraEdit = uieditfield(gasesGrid, 'numeric');
+            
+            uilabel(gasesGrid, 'Text', 'Tempo de análise (horas):');
+            app.TempoAnaliseHelioEdit = uieditfield(gasesGrid, 'numeric');
+            
+            % Aba - Custos Fixos
+            app.CustosFixosTab = uitab(app.TabGroup, 'Title', 'Custos Fixos');
+            fixosGrid = uigridlayout(app.CustosFixosTab, [8 2]);
+            
+            % Microscópio
+            uilabel(fixosGrid, 'Text', 'Valor do Microscópio (R$):');
+            app.ValorMicroscopioEdit = uieditfield(fixosGrid, 'numeric');
+            
+            uilabel(fixosGrid, 'Text', 'Vida Útil Microscópio (meses):');
+            app.VidaUtilMicroscopioEdit = uieditfield(fixosGrid, 'numeric');
+            
+            % UMT (Ultramicrotomo)
+            uilabel(fixosGrid, 'Text', 'Valor do UMT (R$):');
+            app.ValorUMTEdit = uieditfield(fixosGrid, 'numeric');
+            
+            uilabel(fixosGrid, 'Text', 'Vida Útil UMT (meses):');
+            app.VidaUtilUMTEdit = uieditfield(fixosGrid, 'numeric');
+            
+            % Edificação
+            uilabel(fixosGrid, 'Text', 'Valor da Edificação (R$):');
+            app.ValorEdificacaoEdit = uieditfield(fixosGrid, 'numeric');
+            
+            uilabel(fixosGrid, 'Text', 'Vida Útil Edificação (meses):');
+            app.VidaUtilEdificacaoEdit = uieditfield(fixosGrid, 'numeric');
+            
+            % Análises mensais
+            uilabel(fixosGrid, 'Text', 'Análises Mensais:');
+            app.AnalisesMensaisEdit = uieditfield(fixosGrid, 'numeric');
+            
+            % EPIs
+            uilabel(fixosGrid, 'Text', 'Custo Luvas de Nitrila (R$/par):');
+            app.LuvasNitrilaEdit = uieditfield(fixosGrid, 'numeric');
+            
+            uilabel(fixosGrid, 'Text', 'Custo Óculos de Proteção (R$/un):');
+            app.OculosProtecaoEdit = uieditfield(fixosGrid, 'numeric');
+            
+            uilabel(fixosGrid, 'Text', 'Custo Aventais de Laboratório (R$/un):');
+            app.AventaisLaboratorioEdit = uieditfield(fixosGrid, 'numeric');
+            
+            % Tornar visível
             app.UIFigure.Visible = 'on';
         end
         
-        % Função auxiliar para tratar valores vazios
-        function valor = getValueOrZero(app, campo)
-            if isempty(campo.Value) || isnan(campo.Value)
-                valor = 0;
-            else
-                valor = campo.Value;
-            end
-        end
- 
         function calcularResultados(app)
-            try
-                % Cálculos dos custos por categoria
+            % Função auxiliar para tratar valores vazios
+            function valor = getValueOrZero(campo)
+                if isempty(campo.Value) || isnan(campo.Value)
+                    valor = 0;
+                else
+                    valor = campo.Value;
+                end
+            end
+
+            try    
+                % Cálculo Recursos Humanos
+                custoHoraHomem = getValueOrZero(app.ValorHoraHomemEdit) * getValueOrZero(app.ConsumoHoraHomemEdit);
+                custoHoraBolsa = getValueOrZero(app.ValorBolsaEdit) * getValueOrZero(app.ConsumoHoraBolsaEdit);
                 
-                % Recursos Humanos
-                valorHoraHomem = app.getValueOrZero(app.ValorHoraHomemEdit);
-                consumoHoraHomem = app.getValueOrZero(app.ConsumoHoraHomemEdit);
-                custoHoraHomem = valorHoraHomem * consumoHoraHomem;
+                % Cálculo Insumos
+                % Cu (Cobre)
+                custoGradeUnidade = getValueOrZero(app.GradesCuPacoteEdit) / 100;
+                custoGradesTotal = custoGradeUnidade * getValueOrZero(app.GradesAnaliseEdit);
                 
-                % Insumos
-                % N₂(l) (Nitrogênio Líquido)
-                valorN2 = app.getValueOrZero(app.NitrogenioLiquidoEdit);
-                qtdN2 = app.getValueOrZero(app.QtdNitrogenioEdit);
-                custoN2 = valorN2 * qtdN2;
+                % Resina Epóxi
+                custoResinaEpoxi = getValueOrZero(app.ResinaEpoxiEdit);
                 
-                % Cu (Grades de Cobre)
-                valorGrades = app.getValueOrZero(app.GradesCuEdit);
-                qtdGrades = app.getValueOrZero(app.QtdGradesEdit);
-                custoGrades = valorGrades * qtdGrades;
+                % Lâminas de Vidro para Ultramicrotomo
+                custoLaminasVidro = getValueOrZero(app.LaminasVidroEdit);
                 
-                valorPincas = app.getValueOrZero(app.PincasEdit);
-                qtdPincas = app.getValueOrZero(app.QtdPincasEdit);
-                custoPincas = valorPincas * qtdPincas;
+                % Recipientes para Material Líquido
+                custoRecipientesLiquido = getValueOrZero(app.RecipientesLiquidoEdit);
                 
-                % Utilidades
-                valorEnergia = app.getValueOrZero(app.EnergiaHoraEdit);
-                consumoEnergia = app.getValueOrZero(app.ConsumoEnergiaEdit);
-                custoEnergia = valorEnergia * consumoEnergia;
+                % Recipientes para Material Micropulverulento
+                custoRecipientesMicropulverulento = getValueOrZero(app.RecipientesMicropulverulentoEdit);
+                
+                % Grades de Ouro
+                custoGradesOuro = getValueOrZero(app.GradesOuroPacoteEdit) / 100;
                 
                 % H₂O (Água)
-                valorAgua = app.getValueOrZero(app.AguaM3Edit);
-                consumoAgua = app.getValueOrZero(app.ConsumoAguaEdit);
-                custoAgua = valorAgua * consumoAgua;
-
-                % Custos Fixos
-                valorEquip = app.getValueOrZero(app.ValorEquipamentoEdit);
-                vidaUtil = app.getValueOrZero(app.VidaUtilMesesEdit);
-                analisesMensais = app.getValueOrZero(app.AnalisesMensaisEdit);
+                custoAguaHora = getValueOrZero(app.AguaM3Edit) * getValueOrZero(app.ConsumoAguaHoraEdit);
+                custoAguaTotal = custoAguaHora * getValueOrZero(app.TempoUsoAguaEdit);
                 
-                % Cálculo da depreciação por análise
-                if vidaUtil > 0 && analisesMensais > 0
-                    custoEquipPorAnalise = valorEquip / (vidaUtil * analisesMensais);
+                % Cálculo Utilidades
+                custoEnergiaHora = getValueOrZero(app.EnergiaKwhEdit) * getValueOrZero(app.ConsumoEnergiaHoraEdit);
+                custoEnergiaTotal = custoEnergiaHora * getValueOrZero(app.TempoUsoEnergiaEdit);
+                
+                % Cálculo Gases
+                custoNitrogenioHora = (getValueOrZero(app.NitrogenioReservatorioEdit) / 50) * getValueOrZero(app.ConsumoNitrogenioHoraEdit);
+                custoNitrogenioTotal = custoNitrogenioHora * getValueOrZero(app.TempoAnaliseNitrogenioEdit);
+                
+                custoArgonioHora = (getValueOrZero(app.ArgonioReservatorioEdit) / 50) * getValueOrZero(app.ConsumoArgonioHoraEdit);
+                custoArgonioTotal = custoArgonioHora * getValueOrZero(app.TempoAnaliseArgonioEdit);
+                
+                custoOxigenioHora = (getValueOrZero(app.OxigenioReservatorioEdit) / 50) * getValueOrZero(app.ConsumoOxigenioHoraEdit);
+                custoOxigenioTotal = custoOxigenioHora * getValueOrZero(app.TempoAnaliseOxigenioEdit);
+                
+                custoHelioHora = (getValueOrZero(app.HelioReservatorioEdit) / 50) * getValueOrZero(app.ConsumoHelioHoraEdit);
+                custoHelioTotal = custoHelioHora * getValueOrZero(app.TempoAnaliseHelioEdit);
+                
+                                % Cálculo Custos Fixos por Análise
+                analisesMensais = getValueOrZero(app.AnalisesMensaisEdit);
+                if analisesMensais > 0
+                    custoMicroscopio = getValueOrZero(app.ValorMicroscopioEdit) / (getValueOrZero(app.VidaUtilMicroscopioEdit) * analisesMensais);
+                    custoUMT = getValueOrZero(app.ValorUMTEdit) / (getValueOrZero(app.VidaUtilUMTEdit) * analisesMensais);
+                    custoEdificacao = getValueOrZero(app.ValorEdificacaoEdit) / (getValueOrZero(app.VidaUtilEdificacaoEdit) * analisesMensais);
                 else
-                    custoEquipPorAnalise = 0;
+                    custoMicroscopio = 0;
+                    custoUMT = 0;
+                    custoEdificacao = 0;
                 end
                 
-                % Cálculo do custo total
-                custoTotal = custoHoraHomem + custoN2 + custoGrades + ...
-                            custoPincas + custoEnergia + custoAgua + ...
-                            custoEquipPorAnalise;
+                % EPIs
+                custoLuvasNitrila = getValueOrZero(app.LuvasNitrilaEdit);
+                custoOculosProtecao = getValueOrZero(app.OculosProtecaoEdit);
+                custoAventaisLaboratorio = getValueOrZero(app.AventaisLaboratorioEdit);
                 
-                % Gerar relatório detalhado
-                relatorio = sprintf('=== RELATÓRIO DE CUSTOS - ANÁLISE %s ===\n', upper(app.TipoAnalise));
-                relatorio = [relatorio sprintf('Data: %s\n\n', datetime('now', 'Format', 'dd/MM/yyyy HH:mm:ss'))];
+                % Custo Total
+                custoTotal = custoHoraHomem + custoHoraBolsa + custoGradesTotal + custoResinaEpoxi + ...
+                    custoLaminasVidro + custoRecipientesLiquido + custoRecipientesMicropulverulento + custoGradesOuro + ...
+                    custoAguaTotal + custoEnergiaTotal + custoNitrogenioTotal + custoArgonioTotal + custoOxigenioTotal + custoHelioTotal + ...
+                    custoMicroscopio + custoUMT + custoEdificacao + custoLuvasNitrila + custoOculosProtecao + custoAventaisLaboratorio;
                 
-                % Adicionar detalhes de cada categoria com fórmulas químicas corretas
-                if custoHoraHomem > 0
-                    relatorio = [relatorio sprintf('1. RECURSOS HUMANOS\n')];
-                    relatorio = [relatorio sprintf('   Custo Hora/Homem: R$ %.2f\n\n', custoHoraHomem)];
-                end
-                
-                if (custoN2 + custoGrades + custoPincas) > 0
-                    relatorio = [relatorio sprintf('2. INSUMOS\n')];
-                    if custoN2 > 0
-                        relatorio = [relatorio sprintf('   N₂(l) (Nitrogênio Líquido): R$ %.2f\n', custoN2)];
-                    end
-                    if custoGrades > 0
-                        relatorio = [relatorio sprintf('   Cu (Grades de Cobre): R$ %.2f\n', custoGrades)];
-                    end
-                    if custoPincas > 0
-                        relatorio = [relatorio sprintf('   Pinças de precisão: R$ %.2f\n', custoPincas)];
-                    end
-                    relatorio = [relatorio sprintf('\n')];
-                end
-
-                if (custoEnergia + custoAgua) > 0
-                    relatorio = [relatorio sprintf('3. UTILIDADES\n')];
-                    if custoEnergia > 0
-                        relatorio = [relatorio sprintf('   Energia Elétrica: R$ %.2f\n', custoEnergia)];
-                    end
-                    if custoAgua > 0
-                        relatorio = [relatorio sprintf('   H₂O (Água): R$ %.2f\n', custoAgua)];
-                    end
-                    relatorio = [relatorio sprintf('\n')];
-                end
-                
-                if custoEquipPorAnalise > 0
-                    relatorio = [relatorio sprintf('4. CUSTOS FIXOS\n')];
-                    relatorio = [relatorio sprintf('   Depreciação por Análise: R$ %.2f\n\n', custoEquipPorAnalise)];
-                end
-                
-                relatorio = [relatorio sprintf('CUSTO TOTAL DA ANÁLISE: R$ %.2f\n', custoTotal)];
-                
-                % Exibir resultados em nova janela
-                criarJanelaResultados(app, relatorio);
-                
+                % Criar relatório detalhado
+                criarJanelaResultados(app, custoHoraHomem, custoHoraBolsa, custoGradesTotal, custoResinaEpoxi, ...
+                    custoLaminasVidro, custoRecipientesLiquido, custoRecipientesMicropulverulento, custoGradesOuro, ...
+                    custoAguaTotal, custoEnergiaTotal, custoNitrogenioTotal, custoArgonioTotal, custoOxigenioTotal, custoHelioTotal, ...
+                    custoMicroscopio, custoUMT, custoEdificacao, custoLuvasNitrila, custoOculosProtecao, custoAventaisLaboratorio, custoTotal);
             catch ex
                 msgbox(['Erro ao calcular: ' ex.message], 'Erro', 'error');
             end
         end
-
-        function criarJanelaResultados(app, relatorio)
-            % Fechar janela anterior de resultados se existir
+        
+        function criarJanelaResultados(app, custoHoraHomem, custoHoraBolsa, custoGrades, custoResinaEpoxi, ...
+                custoLaminasVidro, custoRecipientesLiquido, custoRecipientesMicropulverulento, custoGradesOuro, ...
+                custoAgua, custoEnergia, custoNitrogenio, custoArgonio, custoOxigenio, custoHelio, ...
+                custoMicroscopio, custoUMT, custoEdificacao, custoLuvasNitrila, custoOculosProtecao, custoAventaisLaboratorio, custoTotal)
+            
+            % Fechar janela anterior se existir
             if isfield(app, 'ResultFigure') && isvalid(app.ResultFigure)
                 delete(app.ResultFigure);
             end
             
-            % Criar nova janela de resultados
+            % Nova janela de resultados
             app.ResultFigure = uifigure('Name', ['Resultados - Análise ' char(app.TipoAnalise)]);
-            app.ResultFigure.Position = [app.UIFigure.Position(1) + app.UIFigure.Position(3) + 10, ...
-                                      app.UIFigure.Position(2), 500, 700];
+            app.ResultFigure.Position = [app.UIFigure.Position(1) + app.UIFigure.Position(3) + 10, app.UIFigure.Position(2), 500, 600];
             
-            % Grid para organizar elementos
-            resultGrid = uigridlayout(app.ResultFigure, [4 2]);
-            resultGrid.RowHeight = {'fit', 'fit', '1x', 'fit'};
-            resultGrid.ColumnWidth = {'1x', 'fit'};
-            resultGrid.Padding = [10 10 10 10];
-            resultGrid.RowSpacing = 10;
-            
-            % Título
-            tituloLabel = uilabel(resultGrid);
-            tituloLabel.Text = 'RELATÓRIO DE CUSTOS';
-            tituloLabel.FontSize = 16;
-            tituloLabel.FontWeight = 'bold';
-            tituloLabel.Layout.Column = [1 2];
-            tituloLabel.HorizontalAlignment = 'center';
-            
-            % Subtítulo com informações do equipamento e fórmulas químicas
-            subtituloLabel = uilabel(resultGrid);
-            subtituloLabel.Text = ['Microscopia Eletrônica de Transmissão ' ...
-                                 '(N₂(l), H₂O, Cu e outros insumos)'];
-            subtituloLabel.Layout.Column = [1 2];
-            subtituloLabel.HorizontalAlignment = 'center';
+            % Grid para resultados
+            resultGrid = uigridlayout(app.ResultFigure, [3 1]);
+            resultGrid.RowHeight = {'1x', 'fit', 'fit'};
             
             % Área de texto para resultados
             app.ResultadoTextArea = uitextarea(resultGrid);
-            app.ResultadoTextArea.Value = strsplit(relatorio, '\n');
-            app.ResultadoTextArea.Layout.Column = [1 2];
-            app.ResultadoTextArea.Layout.Row = 3;
-            app.ResultadoTextArea.FontName = 'Consolas';
-            app.ResultadoTextArea.FontSize = 12;
-            
-            % Painel de botões
-            buttonGrid = uigridlayout(resultGrid, [1 2]);
-            buttonGrid.Layout.Column = [1 2];
-            buttonGrid.Layout.Row = 4;
-            buttonGrid.Padding = [5 5 5 5];
-            buttonGrid.ColumnWidth = {'1x', '1x'};
+            app.ResultadoTextArea.Value = {
+                '=== RELATÓRIO DE CUSTOS ===';
+                ['Data: ' char(datetime('now', 'Format', 'dd/MM/yyyy HH:mm:ss'))];
+                '';
+                '1. RECURSOS HUMANOS';
+                sprintf('   Custo Técnico: R$ %.2f', custoHoraHomem);
+                sprintf('   Custo Bolsista: R$ %.2f', custoHoraBolsa);
+                '';
+                '2. INSUMOS';
+                sprintf('   Cu (Grades de Cobre): R$ %.2f', custoGrades);
+                sprintf('   Resina Epóxi: R$ %.2f', custoResinaEpoxi);
+                sprintf('   Lâminas de Vidro: R$ %.2f', custoLaminasVidro);
+                sprintf('   Recipientes para Material Líquido: R$ %.2f', custoRecipientesLiquido);
+                sprintf('   Recipientes para Material Micropulverulento: R$ %.2f', custoRecipientesMicropulverulento);
+                sprintf('   Au (Grades de Ouro): R$ %.2f', custoGradesOuro);
+                sprintf('   Subtotal Insumos: R$ %.2f', custoGrades + custoResinaEpoxi + custoLaminasVidro + custoRecipientesLiquido + custoRecipientesMicropulverulento + custoGradesOuro);
+                '';
+                '3. UTILIDADES';
+                sprintf('   Energia Elétrica: R$ %.2f', custoEnergia);
+                sprintf('   H₂O (Água): R$ %.2f', custoAgua);
+                sprintf('   Subtotal Utilidades: R$ %.2f', custoEnergia + custoAgua);
+                '';
+                '4. GASES';
+                sprintf('   N₂(l) (Nitrogênio Líquido): R$ %.2f', custoNitrogenio);
+                sprintf('   Ar (Argônio): R$ %.2f', custoArgonio);
+                sprintf('   O₂ (Oxigênio): R$ %.2f', custoOxigenio);
+                sprintf('   He (Hélio): R$ %.2f', custoHelio);
+                sprintf('   Subtotal Gases: R$ %.2f', custoNitrogenio + custoArgonio + custoOxigenio + custoHelio);
+                '';
+                '5. CUSTOS FIXOS (por análise)';
+                sprintf('   Microscópio: R$ %.2f', custoMicroscopio);
+                sprintf('   UMT (Ultramicrotomo): R$ %.2f', custoUMT);
+                sprintf('   Edificação: R$ %.2f', custoEdificacao);
+                sprintf('   Subtotal Custos Fixos: R$ %.2f', custoMicroscopio + custoUMT + custoEdificacao);
+                '';
+                '6. EPIs';
+                sprintf('   Luvas de Nitrila: R$ %.2f', custoLuvasNitrila);
+                sprintf('   Óculos de Proteção: R$ %.2f', custoOculosProtecao);
+                sprintf('   Aventais de Laboratório: R$ %.2f', custoAventaisLaboratorio);
+                sprintf('   Subtotal EPIs: R$ %.2f', custoLuvasNitrila + custoOculosProtecao + custoAventaisLaboratorio);
+                '';
+                '=== CUSTO TOTAL DA ANÁLISE ===';
+                sprintf('R$ %.2f', custoTotal)
+            };
             
             % Botões
-            uibutton(buttonGrid, 'Text', 'Salvar CSV', ...
-                'ButtonPushedFcn', @(~,~) salvarCSV(app));
+            buttonGrid = uigridlayout(resultGrid, [1 2]);
+            buttonGrid.Padding = [10 10 10 10];
+            buttonGrid.ColumnWidth = {'1x', '1x'};
             
-            uibutton(buttonGrid, 'Text', 'Fechar', ...
-                'ButtonPushedFcn', @(~,~) delete(app.ResultFigure));
+            uibutton(buttonGrid, 'Text', 'Salvar CSV', 'ButtonPushedFcn', @(~,~) salvarCSV(app));
+            
+            uibutton(buttonGrid, 'Text', 'Fechar', 'ButtonPushedFcn', @(~,~) delete(app.ResultFigure));
         end
-            
+        
         function salvarCSV(app)
             try
-                % Abrir diálogo para salvar arquivo
-                [file, path] = uiputfile('*.csv', 'Salvar Resultados da Análise TEM');
+                [file, path] = uiputfile('*.csv', 'Salvar Resultados');
                 if file ~= 0
-                    % Preparar dados para CSV com fórmulas químicas completas
-                    resultados = app.ResultadoTextArea.Value;
-                    
-                    % Abrir arquivo para escrita com suporte a caracteres UTF-8
                     fid = fopen(fullfile(path, file), 'w', 'n', 'UTF-8');
+                    fprintf(fid, '\xEF\xBB\xBF'); % BOM para UTF-8
                     
-                    % Escrever BOM para UTF-8 (necessário para fórmulas químicas)
-                    fprintf(fid, '\xEF\xBB\xBF');
-                    
-                    % Escrever cabeçalho com fórmulas químicas
-                    fprintf(fid, 'Análise TEM - Custos (N₂(l) (Nitrogênio Líquido), H₂O (Água), Cu (Grades de Cobre))\n');
-                    
-                    % Escrever resultados
-                    if ischar(resultados)
-                        fprintf(fid, '%s\n', resultados);
-                    else
-                        for i = 1:length(resultados)
-                            fprintf(fid, '%s\n', resultados{i});
-                        end
+                    % Escrever conteúdo
+                    resultados = app.ResultadoTextArea.Value;
+                    for i = 1:length(resultados)
+                        fprintf(fid, '%s\n', resultados{i});
                     end
                     
-                    % Fechar arquivo
                     fclose(fid);
-                    
-                    % Mensagem de sucesso
                     msgbox('Arquivo CSV salvo com sucesso!', 'Sucesso', 'help');
                 end
             catch ex
@@ -343,7 +440,7 @@ classdef AnaliseTemApp < matlab.apps.AppBase
             end
         end
     end
-
+    
     methods (Access = public)
         function app = AnaliseTemApp(tipo)
             try
@@ -353,12 +450,16 @@ classdef AnaliseTemApp < matlab.apps.AppBase
                     app.TipoAnalise = string(tipo);
                 end
                 createComponents(app);
-                app.UIFigure.Visible = 'on';
             catch ex
-                disp(['Erro na criação da interface: ' ex.message]);
-                disp(getReport(ex));
+                delete(app);
+                rethrow(ex);
+            end
+        end
+        
+        function delete(app)
+            if isvalid(app.UIFigure)
+                delete(app.UIFigure);
             end
         end
     end
 end
- 

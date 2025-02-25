@@ -1,6 +1,6 @@
 classdef LabMicroscopiaApp < matlab.apps.AppBase
     properties (Access = private)
-        % Componentes principais da UI
+        % Componentes principais da UI usando o padrão moderno
         UIFigure            matlab.ui.Figure
         MainGrid           matlab.ui.container.GridLayout
         
@@ -8,12 +8,12 @@ classdef LabMicroscopiaApp < matlab.apps.AppBase
         MenuBar            matlab.ui.container.Menu
         AnaliseMenu        matlab.ui.container.Menu
         TEMMenu            matlab.ui.container.Menu
-        RAMANMenu          matlab.ui.container.Menu
+        % RAMANMenu          matlab.ui.container.Menu  % Comentado conforme solicitado
         EDSMenu            matlab.ui.container.Menu
         DRXMenu            matlab.ui.container.Menu
-        CrioMenu           matlab.ui.container.Menu
+        CrioMenu          matlab.ui.container.Menu
         AjudaMenu          matlab.ui.container.Menu
-        SobreMenu          matlab.ui.container.Menu
+        SobreMenu         matlab.ui.container.Menu
         
         % Propriedades para controle de versão e data
         Version     = '1.0'
@@ -23,26 +23,27 @@ classdef LabMicroscopiaApp < matlab.apps.AppBase
     methods (Access = private)
         function abrirAnaliseTEM(app, tipo)
     try
-        % Criação de nova análise TEM com suporte a N₂(l) (Nitrogênio Líquido),
-        % H₂O (Água) e Cu (Grades de Cobre)
+        % Criação de nova análise TEM com suporte a:
+        % N₂(l) (Nitrogênio Líquido)
+        % H₂O (Água)
+        % Cu (Grades de Cobre)
         novaAnalise = AnaliseTemApp(tipo);
     catch ex
         msgbox(sprintf('Erro ao abrir análise TEM: %s', ex.message), 'Erro', 'error');
     end
 end
         
-        function abrirAnaliseRAMAN(app)
-            try
-                % Sistema RAMAN com suporte a análise de compostos orgânicos e inorgânicos
-                novaAnalise = AnaliseRamanApp('RAMAN Padrão');
-            catch ex
-                msgbox(sprintf('Erro ao abrir análise RAMAN: %s', ex.message), 'Erro', 'error');
-            end
-        end
+        % Função RAMAN comentada conforme solicitado
+        % function abrirAnaliseRAMAN(app)
+        %     try
+        %         novaAnalise = AnaliseRamanApp('RAMAN Padrão');
+        %     catch ex
+        %         msgbox(sprintf('Erro ao abrir análise RAMAN: %s', ex.message), 'Erro', 'error');
+        %     end
+        % end
         
         function abrirAnaliseEDS(app)
             try
-                % Análise de composição elementar por EDS
                 msgbox(['Análise EDS (Espectroscopia por Dispersão em Energia) em desenvolvimento\n', ...
                        'Suporte planejado para análise multi-elementar'], 'Informação', 'help');
             catch ex
@@ -52,7 +53,6 @@ end
         
         function abrirAnaliseDRX(app)
             try
-                % Análise de estrutura cristalina por DRX
                 msgbox(['Análise DRX (Difração de Raios X) em desenvolvimento\n', ...
                        'Suporte planejado para análise de fases cristalinas'], 'Informação', 'help');
             catch ex
@@ -60,34 +60,29 @@ end
             end
         end
 
-        % Callbacks dos menus
+        % Callbacks dos menus atualizados para o padrão moderno
         function TEMMenuSelected(app, ~)
-            % Menu para Microscopia Eletrônica de Transmissão padrão
             abrirAnaliseTEM(app, 'TEM Padrão');
         end
         
         function CriogenicoMenuSelected(app, ~)
-            % Menu para Microscopia Eletrônica de Transmissão em condições criogênicas
-            % Utiliza N₂(l) (Nitrogênio Líquido) para resfriamento
             abrirAnaliseTEM(app, 'TEM Criogênico');
         end
 
-        function RAMANMenuSelected(app, ~)
-            try
-                % Menu para Espectroscopia Raman
-                novaAnalise = AnaliseRamanApp('RAMAN Padrão');
-            catch ex
-                msgbox(sprintf('Erro ao abrir análise RAMAN: %s', ex.message), 'Erro', 'error');
-            end
-        end
+        % Callback RAMAN comentado conforme solicitado
+        % function RAMANMenuSelected(app, ~)
+        %     try
+        %         novaAnalise = AnaliseRamanApp('RAMAN Padrão');
+        %     catch ex
+        %         msgbox(sprintf('Erro ao abrir análise RAMAN: %s', ex.message), 'Erro', 'error');
+        %     end
+        % end
         
         function EDSMenuSelected(app, ~)
-            % Menu para Espectroscopia por Dispersão em Energia
             abrirAnaliseEDS(app);
         end
         
         function DRXMenuSelected(app, ~)
-            % Menu para Difração de Raios X
             abrirAnaliseDRX(app);
         end
         
@@ -98,7 +93,6 @@ end
                 'Data: %s\n\n', ...
                 'Técnicas Disponíveis:\n', ...
                 '- TEM (Microscopia Eletrônica de Transmissão)\n', ...
-                '- RAMAN (Espectroscopia Raman)\n', ...
                 '- EDS (Espectroscopia por Dispersão em Energia)\n', ...
                 '- DRX (Difração de Raios X)\n\n', ...
                 'Compostos e Reagentes Utilizados:\n', ...
@@ -112,105 +106,84 @@ end
         end
           
         function createComponents(app)
-              % Criar a janela principal
-              app.UIFigure = uifigure('Visible', 'off');
-              app.UIFigure.WindowStyle = 'normal';
-              app.UIFigure.Position = [100 100 800 700];
-              app.UIFigure.Name = 'Laboratório de Microscopia - Sistema de Análise de Custos';
-              app.UIFigure.WindowStyle = 'normal';
-              app.UIFigure.Resize = 'on';
-              
-              % Criar barra de menu
-              app.MenuBar = uimenu(app.UIFigure, 'Text', 'Menu');
-              
-              % Menu Análises com técnicas e compostos
-              app.AnaliseMenu = uimenu(app.MenuBar, 'Text', 'Análises');
-              
-              % Submenu TEM com informações sobre compostos
-              app.TEMMenu = uimenu(app.AnaliseMenu, 'Text', ...
-                  'TEM (Microscopia Eletrônica de Transmissão) - N₂(l), Cu, H₂O');
-              
-              % Menu de análise padrão
-              uimenu(app.TEMMenu, 'Text', 'Análise Padrão', ...
-                  'MenuSelectedFcn', @(~,~) app.TEMMenuSelected);
-              
-              % Menu de análise criogênica
-              uimenu(app.TEMMenu, 'Text', 'Análise Criogênica', ...
-                  'MenuSelectedFcn', @(~,~) app.CriogenicoMenuSelected);
-              
-              % Outros menus de análise com suas especificidades
-              app.RAMANMenu = uimenu(app.AnaliseMenu, 'Text', ...
-                  'RAMAN (Espectroscopia Raman)', ...
-                  'MenuSelectedFcn', @(~,~) app.RAMANMenuSelected);
-              
-              app.EDSMenu = uimenu(app.AnaliseMenu, 'Text', ...
-                  'EDS (Espectroscopia por Dispersão em Energia)', ...
-                  'MenuSelectedFcn', @(~,~) app.EDSMenuSelected);
-              
-              app.DRXMenu = uimenu(app.AnaliseMenu, 'Text', ...
-                  'DRX (Difração de Raios X)', ...
-                  'MenuSelectedFcn', @(~,~) app.DRXMenuSelected);
-              
-              % Menu Ajuda
-              app.AjudaMenu = uimenu(app.MenuBar, 'Text', 'Ajuda');
-              app.SobreMenu = uimenu(app.AjudaMenu, 'Text', 'Sobre', ...
-                  'MenuSelectedFcn', @(~,~) app.SobreMenuSelected);
-              
-              % Grid principal
-              app.MainGrid = uigridlayout(app.UIFigure, [2 1]);
-              app.MainGrid.Padding = [20 20 20 20];
-              app.MainGrid.RowHeight = {'1x', '4x'};
-              
-              % Criar cabeçalho com mensagem de boas-vindas
-              bemVindoLabel = uilabel(app.MainGrid);
-              bemVindoLabel.Text = sprintf(['Bem-vindo ao Sistema de Análise de Custos\n', ...
-                  'Laboratório de Microscopia\n\n', ...
-                  'Selecione uma análise no menu superior\n\n', ...
-                  'Principais Compostos: N₂(l) (Nitrogênio Líquido), ', ...
-                  'Cu (Grades de Cobre), H₂O (Água)']);
-              bemVindoLabel.HorizontalAlignment = 'center';
-              bemVindoLabel.FontSize = 16;
-              bemVindoLabel.FontWeight = 'bold';
-              bemVindoLabel.Layout.Row = 1;
-              
-              % Tornar a interface visível
-              app.UIFigure.Visible = 'on';
-          end
-        end    
+            % Criar a janela principal usando o padrão moderno
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Position = [100 100 800 700];
+            app.UIFigure.Name = 'Laboratório de Microscopia - Sistema de Análise de Custos';
+            app.UIFigure.WindowStyle = 'normal';
+            
+            % Grid layout principal atualizado
+            app.MainGrid = uigridlayout(app.UIFigure, [3 1]);
+            app.MainGrid.RowHeight = {'fit', '1x', 'fit'};
+            app.MainGrid.Padding = [20 20 20 20];
+            app.MainGrid.RowSpacing = 20;
+            
+            % Barra de menu atualizada
+            app.MenuBar = uimenu(app.UIFigure, 'Text', 'Menu');
+            app.AnaliseMenu = uimenu(app.MenuBar, 'Text', 'Análises');
+            
+            % Menu TEM atualizado
+            app.TEMMenu = uimenu(app.AnaliseMenu, 'Text', ...
+                'TEM (Microscopia Eletrônica de Transmissão) - N₂(l), Cu, H₂O');
+            
+            uimenu(app.TEMMenu, 'Text', 'Análise Padrão', ...
+                'MenuSelectedFcn', @(~,~) app.TEMMenuSelected);
+            
+            uimenu(app.TEMMenu, 'Text', 'Análise Criogênica', ...
+                'MenuSelectedFcn', @(~,~) app.CriogenicoMenuSelected);
+            
+            % Outros menus atualizados
+            app.EDSMenu = uimenu(app.AnaliseMenu, 'Text', ...
+                'EDS (Espectroscopia por Dispersão em Energia)', ...
+                'MenuSelectedFcn', @(~,~) app.EDSMenuSelected);
+            
+            app.DRXMenu = uimenu(app.AnaliseMenu, 'Text', ...
+                'DRX (Difração de Raios X)', ...
+                'MenuSelectedFcn', @(~,~) app.DRXMenuSelected);
+            
+            % Menu Ajuda atualizado
+            app.AjudaMenu = uimenu(app.MenuBar, 'Text', 'Ajuda');
+            app.SobreMenu = uimenu(app.AjudaMenu, 'Text', 'Sobre', ...
+                'MenuSelectedFcn', @(~,~) app.SobreMenuSelected);
+            
+            % Cabeçalho atualizado com o padrão moderno
+            bemVindoLabel = uilabel(app.MainGrid);
+            bemVindoLabel.Text = sprintf(['Bem-vindo ao Sistema de Análise de Custos\n', ...
+                'Laboratório de Microscopia\n\n', ...
+                'Selecione uma análise no menu superior\n\n', ...
+                'Principais Compostos: N₂(l) (Nitrogênio Líquido), ', ...
+                'Cu (Grades de Cobre), H₂O (Água)']);
+            bemVindoLabel.HorizontalAlignment = 'center';
+            bemVindoLabel.FontSize = 16;
+            bemVindoLabel.FontWeight = 'bold';
+            bemVindoLabel.Layout.Row = 1;
+            
+            % Tornar a interface visível
+            app.UIFigure.Visible = 'on';
+        end
+    end    
       
     methods (Access = public)
-          function app = LabMicroscopiaApp
-          try
-              % Inicialização do aplicativo com data e usuário atuais
-              app.Version = '1.0';
-              app.UpdateDate = datestr(now, 'yyyy-mm-dd'); % Data atual automática
-              
-              % Criar componentes com suporte a fórmulas químicas:
-              % - N₂(l) (Nitrogênio Líquido)
-              % - H₂O (Água)
-              % - Cu (Grades de Cobre)
-              % - Al₂O₃ (Óxido de Alumínio)
-              % - SiO₂ (Dióxido de Silício)
-              createComponents(app);
-              
-              % Registrar informações de uso com data e hora automáticas
-              disp(['Aplicativo iniciado por: ', 'Altiort']);
-              disp(['Data e hora de início: ', datestr(now, 'yyyy-mm-dd HH:MM:SS')]);
-              
-          catch ex
-              % Em caso de erro, limpar e relançar exceção
-              delete(app);
-              rethrow(ex);
-          end
-      end
+        function app = LabMicroscopiaApp
+            try
+                app.Version = '1.0';
+                app.UpdateDate = '2025-02-24'; % Data fixa para controle de versão
+                createComponents(app);
+                
+                % Registro de uso atualizado
+                disp(['Aplicativo iniciado por: ', 'Altiort']);
+                disp(['Data e hora de início: ', datestr(now, 'yyyy-mm-dd HH:MM:SS')]);
+                
+            catch ex
+                delete(app);
+                rethrow(ex);
+            end
+        end
         
-        % Destruidor da classe
         function delete(app)
-            % Limpar recursos ao fechar o aplicativo
             if isvalid(app.UIFigure)
                 delete(app.UIFigure);
             end
         end
     end
 end
- 
